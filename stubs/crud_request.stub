@@ -1,0 +1,68 @@
+package requests
+
+import (
+	"context"
+	"imohamedsheta/xframe/app/database/models"
+	"imohamedsheta/xframe/app/shared/enums"
+)
+
+type {{ENTITY}}Filters struct {
+	SearchBy map[string]string `json:"search_by" form:"search_by"`
+	SearchFilters
+	SortingFilters
+	PaginationFilters
+}
+
+type Create{{ENTITY}}Request struct {
+	Name string `form:"name" json:"name" validate:"required,min=3,max=150"`
+	Request
+}
+
+// Validate performs custom conditional validation
+func (r *Create{{ENTITY}}Request) Validate() (map[string]any, error) {
+	errors := make(map[string]any)
+	messages := r.Messages()
+
+	// Add custom validation logic here
+
+	return errors, nil
+}
+
+func (r *Create{{ENTITY}}Request) Messages() map[string]string {
+	return map[string]string{
+		"name.required": "Name is required",
+		"name.min":      "Name must be at least 3 characters",
+		"name.max":      "Name must not exceed 150 characters",
+	}
+}
+
+//---------------------------------------------------------------------------------------------------
+
+type Update{{ENTITY}}Request struct {
+	Name *string `form:"name" json:"name" validate:"omitempty,min=3,max=150"`
+	Request
+}
+
+// Validate performs custom conditional validation
+func (r *Update{{ENTITY}}Request) Validate(ctx context.Context) (map[string]any, error) {
+	errors := make(map[string]any)
+	messages := r.Messages()
+
+	// Add custom validation logic here
+
+	return errors, nil
+}
+
+func (r *Update{{ENTITY}}Request) Messages() map[string]string {
+	return map[string]string{
+		"name.min": "Name must be at least 3 characters",
+		"name.max": "Name must not exceed 150 characters",
+	}
+}
+
+func (r *Update{{ENTITY}}Request) ApplyToModel(m *models.{{ENTITY}}) {
+	if r.Name != nil {
+		m.Name = *r.Name
+	}
+}
+

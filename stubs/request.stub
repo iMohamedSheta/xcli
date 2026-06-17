@@ -1,0 +1,13 @@
+package requests
+
+type {{struct}} struct {
+	Request
+}
+
+func (r *{{struct}}) Messages() map[string]string {
+	return map[string]string{
+    /*
+      "key": "{{message}}",
+    */
+	}
+}

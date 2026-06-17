@@ -1,0 +1,62 @@
+package tasks
+
+import (
+	"context"
+	"fmt"
+	"imohamedsheta/xframe/app/shared/x"
+
+	"github.com/hibiken/asynq"
+)
+
+
+// {{struct}} implement Task interface also it's used as payload for task
+type {{struct}} struct {
+  // payload
+}
+
+func New{{struct}}() *{{struct}} {
+	return &{{struct}}{}
+}
+
+func (t *{{struct}}) GetTaskType() string {
+	return "{{struct}}"
+}
+
+func (t *{{struct}}) GetPayload() interface{} {
+	return *t // Return itself as payload
+}
+
+func (t *{{struct}}) CreateTask() (*asynq.Task, error) {
+	return CreateAsynqTask(t, asynq.Queue("{{struct}}"), asynq.MaxRetry(5))
+}
+
+/*
+|------------------------------------------
+|  Task handler: {{struct}}Handler
+|------------------------------------------
+*/
+type {{struct}}Handler struct {
+}
+
+// Return a new {{struct}} task Handler
+func New{{struct}}Handler() *{{struct}}Handler {
+	return &{{struct}}Handler{}
+}
+
+// Handler method for the {{struct}} task implement Handler interface
+func (h *{{struct}}Handler) ProcessTask(ctx context.Context, t *asynq.Task) error {
+	return processTaskPayload(ctx, t, h.handle)
+}
+
+/*
+|-------------------------------------------------
+|  Actual task handling code goes here:
+|-------------------------------------------------
+*/
+func (p *{{struct}}Handler) handle(ctx context.Context, payload *{{struct}}) error {
+	// Here is the actual task handling code
+	// ...
+	x.Log().Channel("queue_log").Info(fmt.Sprintf("{{struct}}Handler: %s payload: %v", payload.GetTaskType(), payload.GetPayload()))
+
+	return nil
+}

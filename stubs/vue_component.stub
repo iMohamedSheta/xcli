@@ -1,0 +1,15 @@
+<script setup lang="ts">
+import { usePage } from '@inertiajs/vue3'
+
+// Write your TypeScript code here.
+const page = usePage()
+
+</script>
+
+<template>
+  <!-- Write your Vue code here. -->
+</template>
+
+<style scoped>
+/* Write your CSS code here. */
+</style>

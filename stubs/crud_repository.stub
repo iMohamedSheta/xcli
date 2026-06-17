@@ -1,0 +1,116 @@
+package repository
+
+import (
+	"imohamedsheta/xframe/app/api/requests"
+	"imohamedsheta/xframe/app/database/models"
+	"imohamedsheta/xframe/app/shared/utils"
+
+	"github.com/gin-gonic/gin"
+	"github.com/iMohamedSheta/xqb"
+)
+
+type {{ENTITY}}Repository struct {
+}
+
+func New{{ENTITY}}Repository() *{{ENTITY}}Repository {
+	return &{{ENTITY}}Repository{}
+}
+
+func (r *{{ENTITY}}Repository) Paginate(c *gin.Context, filters *requests.{{ENTITY}}Filters) (data []map[string]any, meta map[string]any, err error) {
+	if filters == nil {
+		filters = &requests.{{ENTITY}}Filters{}
+	}
+
+	auth, xerror := auth.AuthUser(c)
+	if xerror != nil {
+		return nil, nil, xerror
+	}
+
+	q := xqb.Table("{{table_name}}").
+		WithContext(c).
+		Select("{{table_name}}.*").
+		Where("{{table_name}}.agency_id", "=", auth.AgencyId)
+
+	// Search by name
+	if filters.Search != "" {
+		q.Where("{{table_name}}.name", "ILIKE", "%"+filters.Search+"%")
+	}
+
+	mappedFields := map[string][]string{
+		"name": {"{{table_name}}.name"},
+	}
+
+	// Apply column search filters
+	for col, val := range filters.SearchBy {
+		if fields, ok := mappedFields[col]; ok && val != "" {
+			for _, field := range fields {
+				q.Where(field, "ILIKE", "%"+val+"%")
+			}
+		}
+	}
+
+	// Apply sorting
+	if filters.SortBy != "" && filters.SortOrder != "" {
+		if fields, ok := mappedFields[filters.SortBy]; ok {
+			for _, field := range fields {
+				q.OrderBy(field, filters.SortOrder)
+			}
+		}
+	}
+
+	// Apply pagination
+	if filters.Page > 0 {
+		q.Page(filters.Page)
+	}
+	if filters.PerPage > 0 {
+		q.PerPage(filters.PerPage)
+	}
+
+	result, err := q.Get()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return result.Data, result.Meta, nil
+}
+
+func (r *{{ENTITY}}Repository) Create(c *gin.Context, {{entity}} *models.{{ENTITY}}) error {
+	return xqb.Table("{{table_name}}").WithContext(c).Insert({{entity}})
+}
+
+func (r *{{ENTITY}}Repository) Update(c *gin.Context, agencyId *int64, {{entity}} *models.{{ENTITY}}) error {
+	return xqb.Table("{{table_name}}").
+		WithContext(c).
+		Where("id", "=", {{entity}}.ID).
+		Where("agency_id", "=", *agencyId).
+		Update({{entity}})
+}
+
+func (r *{{ENTITY}}Repository) FindById(c *gin.Context, agencyId *int64, id int64, selectFields []string) (*models.{{ENTITY}}, error) {
+	var {{entity}} models.{{ENTITY}}
+
+	q := xqb.Table("{{table_name}}").
+		WithContext(c).
+		Where("id", "=", id).
+		Where("agency_id", "=", *agencyId)
+
+	if len(selectFields) > 0 {
+		q.Select(selectFields...)
+	}
+
+	err := q.First(&{{entity}})
+	if err != nil {
+		return nil, err
+	}
+
+	return &{{entity}}, nil
+}
+
+func (r *{{ENTITY}}Repository) Delete(c *gin.Context, agencyId *int64, id int64) error {
+	return xqb.Table("{{table_name}}").
+		WithContext(c).
+		Where("id", "=", id).
+		Where("agency_id", "=", *agencyId).
+		Delete()
+}
+

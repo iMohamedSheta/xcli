@@ -1,0 +1,8 @@
+package actions
+
+type {{struct}} struct {
+}
+
+func New{{struct}}() *{{struct}} {
+	return &{{struct}}{}
+}

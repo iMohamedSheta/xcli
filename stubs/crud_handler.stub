@@ -1,0 +1,117 @@
+package {{package}}
+
+import (
+	"errors"
+	"imohamedsheta/xframe/app/api/actions"
+	"imohamedsheta/xframe/app/api/handlers"
+	"imohamedsheta/xframe/app/api/repository"
+	"imohamedsheta/xframe/app/api/requests"
+	"imohamedsheta/xframe/app/shared/enums"
+	"imohamedsheta/xframe/app/shared/utils"
+	"imohamedsheta/xframe/pkg/inertia"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+	"github.com/iMohamedSheta/xerr"
+	"github.com/iMohamedSheta/xqb"
+)
+
+type {{ENTITY}}Handler struct {
+	*handlers.Handler
+	{{entity}}Action *actions.{{ENTITY}}Action
+	{{entity}}Repo   *repository.{{ENTITY}}Repository
+}
+
+func New{{ENTITY}}Handler(inertia *inertia.Inertia, {{entity}}Action *actions.{{ENTITY}}Action, {{entity}}Repo *repository.{{ENTITY}}Repository) *{{ENTITY}}Handler {
+	return &{{ENTITY}}Handler{
+		Handler:     handlers.NewBaseHandler(inertia),
+		{{entity}}Action: {{entity}}Action,
+		{{entity}}Repo:   {{entity}}Repo,
+	}
+}
+
+func (h *{{ENTITY}}Handler) Index(c *gin.Context) error {
+	var filters requests.{{ENTITY}}Filters
+	if err := h.BindFilters(c, &filters); err != nil {
+		return xerr.New("Invalid query parameters", enums.XErrBadRequestBindingError, err)
+	}
+
+	data, meta, err := h.{{entity}}Repo.Paginate(c, &filters)
+	if err != nil {
+		return xerr.New("Failed to get {{entities}}", enums.XErrServerError, err)
+	}
+
+	if data == nil {
+		data = make([]map[string]any, 0)
+	}
+
+	return h.Inertia.Render(c, "{{ENTITY}}/Index", inertia.Props{
+		"{{entities}}":      data,
+		"paginate_meta": meta,
+	})
+}
+
+func (h *{{ENTITY}}Handler) Create(c *gin.Context) error {
+	var req requests.Create{{ENTITY}}Request
+	if err := h.BindAndValidate(c, &req); err != nil {
+		var xe *xerr.XErr
+		if errors.As(err, &xe) && xe.IsType(enums.XErrValidationError) {
+			return nil
+		}
+		return err
+	}
+
+	if err := h.{{entity}}Action.Create(c, &req); err != nil {
+		return err
+	}
+
+	return h.FlashAlertBack(c, 201, utils.ToastSuccess("تم انشاء {{entity_ar}} بنجاح.", "تم انشاء {{entity_ar}} بنجاح."))
+}
+
+func (h *{{ENTITY}}Handler) Update(c *gin.Context) error {
+	idStr := c.Param("id")
+	if idStr == "" {
+		return xerr.New("id is required", enums.XErrBadRequestError, nil)
+	}
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		return xerr.New("id must be a number", enums.XErrBadRequestError, err)
+	}
+
+	var req requests.Update{{ENTITY}}Request
+	if err := h.BindAndValidate(c, &req); err != nil {
+		var xe *xerr.XErr
+		if errors.As(err, &xe) && xe.IsType(enums.XErrValidationError) {
+			return nil
+		}
+		return err
+	}
+
+	if err := h.{{entity}}Action.Update(c, id, &req); err != nil {
+		return err
+	}
+
+	return h.FlashAlertBack(c, 200, utils.ToastSuccess("تم تعديل {{entity_ar}} بنجاح.", "تم تعديل {{entity_ar}} بنجاح."))
+}
+
+func (h *{{ENTITY}}Handler) Delete(c *gin.Context) error {
+	idStr := c.Param("id")
+	if idStr == "" {
+		return xerr.New("id is required", enums.XErrBadRequestError, nil)
+	}
+
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		return xerr.New("id must be a number", enums.XErrBadRequestError, err)
+	}
+
+	if err := h.{{entity}}Action.Delete(c, id); err != nil {
+		if errors.Is(err, xqb.ErrNotFound) {
+			return xerr.New("{{entity}} not found", enums.XErrNotFoundError, err)
+		}
+		return xerr.New("failed to delete {{entity}}", enums.XErrServerError, err)
+	}
+
+	return h.FlashAlertBack(c, 200, utils.ToastSuccess("تم حذف {{entity_ar}} بنجاح", "تم حذف {{entity_ar}} بنجاح"))
+}
+

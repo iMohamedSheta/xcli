@@ -1,0 +1,60 @@
+package actions
+
+import (
+	"imohamedsheta/xframe/app/api/repository"
+	"imohamedsheta/xframe/app/api/requests"
+	"imohamedsheta/xframe/app/database/models"
+	"imohamedsheta/xframe/app/shared/utils"
+
+	"github.com/gin-gonic/gin"
+)
+
+type {{ENTITY}}Action struct {
+	{{entity}}Repo *repository.{{ENTITY}}Repository
+}
+
+func New{{ENTITY}}Action({{entity}}Repo *repository.{{ENTITY}}Repository) *{{ENTITY}}Action {
+	return &{{ENTITY}}Action{
+		{{entity}}Repo: {{entity}}Repo,
+	}
+}
+
+func (a *{{ENTITY}}Action) Create(c *gin.Context, req *requests.Create{{ENTITY}}Request) error {
+	user, xerror := auth.AuthUser(c)
+	if xerror != nil {
+		return xerror
+	}
+
+	{{entity}} := models.{{ENTITY}}{
+		Name:     req.Name,
+		AgencyId: user.AgencyId,
+	}
+
+	return a.{{entity}}Repo.Create(c, &{{entity}})
+}
+
+func (a *{{ENTITY}}Action) Delete(c *gin.Context, {{entity}}Id int64) error {
+	user, xerror := auth.AuthUser(c)
+	if xerror != nil {
+		return xerror
+	}
+
+	return a.{{entity}}Repo.Delete(c, &user.AgencyId, {{entity}}Id)
+}
+
+func (a *{{ENTITY}}Action) Update(c *gin.Context, {{entity}}Id int64, req *requests.Update{{ENTITY}}Request) error {
+	user, xerror := auth.AuthUser(c)
+	if xerror != nil {
+		return xerror
+	}
+
+	{{entity}}, err := a.{{entity}}Repo.FindById(c, &user.AgencyId, {{entity}}Id, nil)
+	if err != nil {
+		return err
+	}
+
+	req.ApplyToModel({{entity}})
+
+	return a.{{entity}}Repo.Update(c, &user.AgencyId, {{entity}})
+}
+

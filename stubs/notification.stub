@@ -1,0 +1,74 @@
+package {{package}}
+
+import (
+	"fmt"
+	"imohamedsheta/xframe/app/shared/utils"
+	"time"
+
+	"github.com/hibiken/asynq"
+)
+
+type {{struct}} struct {}
+
+func New{{struct}}() *{{struct}}  {
+	return &{{struct}}{}
+}
+
+func (n *{{struct}}) Type() string {
+	return "{{struct}}"
+}
+
+func (n *{{struct}}) Channels() []string {
+	return []string{"database", "websocket"}
+}
+
+func (n *{{struct}}) ShouldQueue() bool {
+	return true
+}
+
+func (n *{{struct}}) ScheduledAt() *time.Time {
+	return nil
+}
+
+func (n *{{struct}}) Data(channel string, notifiableType string, notifiableId int64) map[string]any {
+	loc, _ := time.LoadLocation("Africa/Cairo")
+	t := time.Now().In(loc).Format(time.RFC3339)
+
+	utils.PrintErr(t)
+	// Database channel data
+	if channel == "database" {
+		return map[string]any{
+			"title":             "تم انشاء طلب جديد",
+			"message":           "تم استلام طلب تذاكر جديد بواسطة مستخدم بالرجاء مراجعة الطلب!",
+			"notification_type": "notification",
+			"link":              "",
+			"timestamp":         t,
+		}
+	}
+
+	// Websocket channel data
+	if channel == "websocket" {
+		return map[string]any{
+			"channel": fmt.Sprintf("user_notifications.%d", notifiableId),
+			"payload": map[string]any{
+				"id":      time.Now().UnixMilli(),
+				"title":   "تم انشاء طلب جديد",
+				"message": "تم استلام طلب تذاكر جديد بواسطة مستخدم بالرجاء مراجعة الطلب!",
+				"time":    t,
+				"type":    "notification",
+				"read":    false,
+			},
+		}
+	}
+
+	return nil
+}
+
+func (n *{{struct}}) QueueOpts(channel string) []asynq.Option {
+	if channel == "websocket" {
+		return []asynq.Option{
+			asynq.Queue("ws_notifications"),
+		}
+	}
+	return nil
+}

@@ -1,0 +1,16 @@
+package {{package}}
+
+import (
+	"imohamedsheta/xframe/app/api/handlers"
+	"imohamedsheta/xframe/pkg/inertia"
+)
+
+type {{struct}} struct {
+	*handlers.Handler
+}
+
+func New{{struct}}(inertia *inertia.Inertia) *{{struct}} {
+	return &{{struct}}{
+		Handler: handlers.NewBaseHandler(inertia),
+	}
+}

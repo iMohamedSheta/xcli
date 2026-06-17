@@ -1,0 +1,16 @@
+package models
+
+import (
+	"time"
+)
+
+type {{MODEL_NAME}} struct {
+	Id        int64     `xqb:"id" json:"id"`
+	CreatedAt time.Time `xqb:"created_at" json:"created_at"`
+	UpdatedAt time.Time `xqb:"updated_at" json:"updated_at"`
+	BaseModel
+}
+
+func ({{MODEL_NAME}}) Table() string {
+	return "{{TABLE_NAME}}"
+}
