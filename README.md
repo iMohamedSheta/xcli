@@ -73,6 +73,41 @@ xcli migrate
 xcli migrate --connection tenant
 ```
 
+### 4. CLI-Only Commands (Optimizing App Boot)
+For faster execution and to prevent startup failures when environment configuration files (like `.env`) are missing, you can skip loading database and cache services for commands that don't need them.
+
+`XCli` provides a helper function `xcli.IsCliOnly(cmd)` that returns `true` for all generator and helper commands (like `make:*`, `stub:publish`, `help`, `version`, `build:*`, `dev`, etc.).
+
+In your local `main.go`, use it to conditionally boot your application:
+
+```go
+package main
+
+import (
+	"os"
+	"github.com/imohamedsheta/xcli"
+	"github.com/imohamedsheta/xapp/bootstrap"
+)
+
+func main() {
+	cmd := ""
+	if len(os.Args) > 1 {
+		cmd = os.Args[1]
+	}
+
+	if xcli.IsCliOnly(cmd) {
+		// Minimal boot: Config + Logger only (no database, no redis connections)
+		bootstrap.NewAppBuilder().LoadConfig().LoadLogger().Boot()
+	} else {
+		// Full boot: Load database, redis, queues, notifications, etc.
+		bootstrap.NewAppBuilder().LoadConfig().LoadLogger().LoadDatabase().LoadRedis().Boot()
+	}
+
+	x := xcli.New()
+	x.Execute()
+}
+```
+
 ---
 
 ## Domain-Driven Migration Layout

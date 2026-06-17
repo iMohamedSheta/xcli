@@ -168,3 +168,17 @@ func suggestInstall(cmd string) bool {
 	fmt.Println(Green + "✅ Installed " + cmd + "." + Reset)
 	return true
 }
+
+// IsCliOnly returns true if the command is a built-in framework utility
+// that does not require database, redis, or service connections.
+func IsCliOnly(cmd string) bool {
+	switch cmd {
+	case "", "help", "version", "stub:publish", "dev", "lint", "scan":
+		return true
+	case "build:app", "build:release", "build:cli":
+		return true
+	case "make:model", "make:vue", "make:lang", "make:handler", "make:action", "make:repo", "make:req", "make:notification", "make:task", "make:crud", "make:migration":
+		return true
+	}
+	return false
+}

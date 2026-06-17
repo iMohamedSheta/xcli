@@ -82,3 +82,31 @@ func TestStubPublishAndOverride(t *testing.T) {
 		t.Errorf("readStub did not return customized stub. Expected %q, got %q", string(customContent), string(overriddenContent))
 	}
 }
+
+func TestIsCliOnly(t *testing.T) {
+	cliOnly := []string{
+		"", "help", "version", "stub:publish", "dev", "lint", "scan",
+		"build:app", "build:release", "build:cli",
+		"make:model", "make:vue", "make:lang", "make:handler",
+		"make:action", "make:repo", "make:req", "make:notification",
+		"make:task", "make:crud", "make:migration",
+	}
+
+	for _, cmd := range cliOnly {
+		if !IsCliOnly(cmd) {
+			t.Errorf("Expected IsCliOnly(%q) to be true, got false", cmd)
+		}
+	}
+
+	needsEnv := []string{
+		"migrate", "migrate:rollback", "migrate:status", "migrate:reset",
+		"migrate:refresh", "migrate:next", "migrate:back", "goose",
+		"unknown-command",
+	}
+
+	for _, cmd := range needsEnv {
+		if IsCliOnly(cmd) {
+			t.Errorf("Expected IsCliOnly(%q) to be false, got true", cmd)
+		}
+	}
+}
