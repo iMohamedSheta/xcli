@@ -2,13 +2,12 @@ package {{package}}
 
 import (
 	"errors"
-	"imohamedsheta/xframe/app/api/actions"
-	"imohamedsheta/xframe/app/api/handlers"
-	"imohamedsheta/xframe/app/api/repository"
-	"imohamedsheta/xframe/app/api/requests"
-	"imohamedsheta/xframe/app/shared/enums"
-	"imohamedsheta/xframe/app/shared/utils"
-	"imohamedsheta/xframe/pkg/inertia"
+    handlers "{{HANDLER_PATH}}"
+    requests "{{REQUESTS_PATH}}"
+    models   "{{MODELS_PATH}}"
+    enums    "{{ENUMS_PATH}}"
+    utils    "{{UTILS_PATH}}"
+    inertia  "{{INERTIA_PATH}}"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -18,11 +17,11 @@ import (
 
 type {{ENTITY}}Handler struct {
 	*handlers.Handler
-	{{entity}}Action *actions.{{ENTITY}}Action
-	{{entity}}Repo   *repository.{{ENTITY}}Repository
+	{{entity}}Action *{{ENTITY}}Action
+	{{entity}}Repo   *{{ENTITY}}Repository
 }
 
-func New{{ENTITY}}Handler(inertia *inertia.Inertia, {{entity}}Action *actions.{{ENTITY}}Action, {{entity}}Repo *repository.{{ENTITY}}Repository) *{{ENTITY}}Handler {
+func New{{ENTITY}}Handler(inertia *inertia.Inertia, {{entity}}Action *{{ENTITY}}Action, {{entity}}Repo *{{ENTITY}}Repository) *{{ENTITY}}Handler {
 	return &{{ENTITY}}Handler{
 		Handler:     handlers.NewBaseHandler(inertia),
 		{{entity}}Action: {{entity}}Action,

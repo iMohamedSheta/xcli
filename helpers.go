@@ -1,6 +1,7 @@
 package xcli
 
 import (
+	"os"
 	"strings"
 )
 
@@ -19,4 +20,11 @@ func toCamel(s string) string {
 		}
 	}
 	return strings.Join(parts, "")
+}
+
+func getEnvPath(envKey, fallback string) string {
+	if val := os.Getenv(envKey); val != "" {
+		return val
+	}
+	return fallback
 }

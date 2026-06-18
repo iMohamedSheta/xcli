@@ -1,9 +1,9 @@
 package repository
 
 import (
-	"imohamedsheta/xframe/app/api/requests"
-	"imohamedsheta/xframe/app/database/models"
-	"imohamedsheta/xframe/app/shared/utils"
+	requests "{{REQUESTS_PATH}}"
+	models "{{MODELS_PATH}}"
+	utils  "{{UTILS_PATH}}"
 
 	"github.com/gin-gonic/gin"
 	"github.com/iMohamedSheta/xqb"
@@ -29,7 +29,7 @@ func (r *{{ENTITY}}Repository) Paginate(c *gin.Context, filters *requests.{{ENTI
 	q := xqb.Table("{{table_name}}").
 		WithContext(c).
 		Select("{{table_name}}.*").
-		Where("{{table_name}}.agency_id", "=", auth.AgencyId)
+		Where("{{table_name}}.tenant_id", "=", auth.TenantId)
 
 	// Search by name
 	if filters.Search != "" {
@@ -78,21 +78,21 @@ func (r *{{ENTITY}}Repository) Create(c *gin.Context, {{entity}} *models.{{ENTIT
 	return xqb.Table("{{table_name}}").WithContext(c).Insert({{entity}})
 }
 
-func (r *{{ENTITY}}Repository) Update(c *gin.Context, agencyId *int64, {{entity}} *models.{{ENTITY}}) error {
+func (r *{{ENTITY}}Repository) Update(c *gin.Context, tenantId *int64, {{entity}} *models.{{ENTITY}}) error {
 	return xqb.Table("{{table_name}}").
 		WithContext(c).
 		Where("id", "=", {{entity}}.ID).
-		Where("agency_id", "=", *agencyId).
+		Where("tenant_id", "=", *tenantId).
 		Update({{entity}})
 }
 
-func (r *{{ENTITY}}Repository) FindById(c *gin.Context, agencyId *int64, id int64, selectFields []string) (*models.{{ENTITY}}, error) {
+func (r *{{ENTITY}}Repository) FindById(c *gin.Context, tenantId *int64, id int64, selectFields []string) (*models.{{ENTITY}}, error) {
 	var {{entity}} models.{{ENTITY}}
 
 	q := xqb.Table("{{table_name}}").
 		WithContext(c).
 		Where("id", "=", id).
-		Where("agency_id", "=", *agencyId)
+		Where("tenant_id", "=", *tenantId)
 
 	if len(selectFields) > 0 {
 		q.Select(selectFields...)
@@ -106,11 +106,11 @@ func (r *{{ENTITY}}Repository) FindById(c *gin.Context, agencyId *int64, id int6
 	return &{{entity}}, nil
 }
 
-func (r *{{ENTITY}}Repository) Delete(c *gin.Context, agencyId *int64, id int64) error {
+func (r *{{ENTITY}}Repository) Delete(c *gin.Context, tenantId *int64, id int64) error {
 	return xqb.Table("{{table_name}}").
 		WithContext(c).
 		Where("id", "=", id).
-		Where("agency_id", "=", *agencyId).
+		Where("tenant_id", "=", *tenantId).
 		Delete()
 }
 

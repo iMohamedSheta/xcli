@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"slices"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -34,6 +35,14 @@ func loadEnv() {
 	} else if _, err := os.Stat(".env"); err == nil {
 		_ = godotenv.Load(".env")
 	}
+}
+
+var cliOnlyCommands = []string{
+	"", "help", "version", "stub:publish", "dev", "lint", "scan",
+	"build:app", "build:release", "build:cli",
+	"make:model", "make:vue", "make:lang", "make:handler", "make:action",
+	"make:repo", "make:req", "make:notification", "make:task", "make:crud",
+	"make:migration", "make:module",
 }
 
 func New() *XCli {
@@ -89,6 +98,7 @@ func New() *XCli {
 			x.makeNotificationCommand(),
 			x.makeTaskCommand(),
 			x.makeCrudCommand(),
+			x.makeModuleCommand(),
 		},
 		"stubs": {
 			x.stubPublishCommand(),
@@ -171,14 +181,7 @@ func suggestInstall(cmd string) bool {
 
 // IsCliOnly returns true if the command is a built-in framework utility
 // that does not require database, redis, or service connections.
+
 func IsCliOnly(cmd string) bool {
-	switch cmd {
-	case "", "help", "version", "stub:publish", "dev", "lint", "scan":
-		return true
-	case "build:app", "build:release", "build:cli":
-		return true
-	case "make:model", "make:vue", "make:lang", "make:handler", "make:action", "make:repo", "make:req", "make:notification", "make:task", "make:crud", "make:migration":
-		return true
-	}
-	return false
+	return slices.Contains(cliOnlyCommands, cmd)
 }

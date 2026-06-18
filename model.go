@@ -11,7 +11,7 @@ import (
 
 func (x *XCli) makeModelCommand() *cobra.Command {
 	stub := "stubs/model.stub"
-	prefixDir := "app/database/models/"
+	prefixDir := getEnvPath("XCLI_PATH_MODELS", "app/models")
 
 	cmd := &cobra.Command{
 		Use:   "make:model [name]",
@@ -23,7 +23,7 @@ func (x *XCli) makeModelCommand() *cobra.Command {
 				return fmt.Errorf("name is required")
 			}
 
-			fileName := filepath.Join(prefixDir, strings.ToLower(name)+".go")
+			fileName := filepath.Join(prefixDir, toSnakeCase(name)+".go")
 			tableName := tableNameFromModel(name)
 			data := map[string]string{
 				"MODEL_NAME": name,

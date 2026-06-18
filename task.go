@@ -18,12 +18,13 @@ func (x *XCli) makeTaskCommand() *cobra.Command {
 }
 
 func (x *XCli) generateTask(name string) error {
+	dir := getEnvPath("XCLI_PATH_TASKS", "app/domain/tasks")
 	file, pkg, err := x.generateGoFile(
 		"stubs/task.stub",
-		"app/shared/tasks", // output folder
-		"Task",             // struct suffix (empty)
+		dir,
+		"Task",
 		name,
-		"tasks", // default package name
+		"tasks",
 	)
 
 	if err != nil {

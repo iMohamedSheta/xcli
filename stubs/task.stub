@@ -3,7 +3,7 @@ package tasks
 import (
 	"context"
 	"fmt"
-	"imohamedsheta/xframe/app/shared/x"
+	x "{{X_APP_PATH}}"
 
 	"github.com/hibiken/asynq"
 )

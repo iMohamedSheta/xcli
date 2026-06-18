@@ -2,8 +2,8 @@ package requests
 
 import (
 	"context"
-	"imohamedsheta/xframe/app/database/models"
-	"imohamedsheta/xframe/app/shared/enums"
+	models "{{MODELS_PATH}}"
+	enums "{{ENUMS_PATH}}"
 )
 
 type {{ENTITY}}Filters struct {
