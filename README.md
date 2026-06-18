@@ -1,21 +1,23 @@
 # XCli - Developer Tooling Made Simple
 
-`XCli` is a powerful developer tooling and code generation command-line interface (CLI) built for modern Go web applications. It automates database migrations, builds, and bootstraps full backend architectures (Models, Repositories, Handlers, Requests, Tasks) and frontend components (Vue 3, Language translation files).
+`XCli` is a powerful developer tooling and code generation command-line interface (CLI) built for xapp framework for golang fullstack web applications. It automates database migrations, builds, and bootstraps modular backend architectures (Handlers, Repositories, Requests, Actions, Tasks) and frontend components (Vue 3, Language translation files).
 
 ---
 
 ## Features
 
-- **Code Generation (`make:*`)**: Instantly bootstrap handlers, models, actions, repositories, requests, tasks, notifications, and Vue components.
-- **Full CRUD Generator (`make:crud`)**: Generate all backend layers (Request, Action, Repository, Handler) and a frontend Vue Index page (complete with pagination, filters, and tables) for any entity in a single command.
-- **Database Migrations (`migrate:*`)**: Run, rollback, reset, check status, or direct passthrough to the underlying Goose driver. Supports multi-database connections and modular domain-driven layouts.
+- **Modular Architecture Support**: Generates code structured for feature-oriented modules (`app/modules/<module>`) natively.
+- **Code Scaffolding (`make:module`)**: Scaffold a new application module containing handler, repository, requests, and router configurations in a single run.
+- **Full CRUD Generator (`make:crud`)**: Generate all backend layers (Request, Action, Repository, Handler) and a frontend Vue Index page (complete with pagination, filters, and tables) for any entity within a module.
+- **Database Migrations (`migrate:*`)**: Run, rollback, reset, check status, or direct passthrough to the underlying Goose driver. Supports multi-database connections and a unified global migrations path.
 - **Customizable Code Generation**: Publish embedded templates (stubs) to your local project, edit them, and have the code generator respect your local overrides.
+- **Flexible Path Configuration**: Customize output directories and Go import packages dynamically via environment variables.
 
 ---
 
 ## Installation
 
-Since `XCli` is built for Go web projects, it is recommended to install it directly using the Go toolchain. This ensures it is compiled correctly for your system architecture:
+Since `XCli` is built for Go web projects, install it directly using the Go toolchain:
 
 ```bash
 # Install globally
@@ -135,7 +137,6 @@ func main() {
 	x := xcli.New()
 
 	// 4. Register custom application commands
-	// You can load them from registers, or declare them directly:
 	x.Register(registers.Commands()...)
 
 	// 5. Run the CLI
@@ -144,27 +145,35 @@ func main() {
 		os.Exit(1)
 	}
 }
-
 ```
 
 ---
 
-## Domain-Driven Migration Layout
+## Overriding Paths & Go Imports
 
-`XCli` supports both monolithic and modular domain-driven migrations out-of-the-box. When you run `migrate`, `migrate:status`, or `migrate:rollback`, the CLI automatically:
-1. Gathers global migrations located in `app/database/migrations/`.
-2. Scans for any active subdirectories in `app/domains/*/database/migrations/`.
-3. Merges these migrations sequentially in a temporary sandbox to be processed in order.
+You can customize directory paths and Go package import targets for code generation using environment variables. This is useful when adapting `XCli` to custom project layouts.
 
-To generate a migration file inside a specific domain, use the `-d` or `--domain` flag:
+### 1. Directory Path Overrides
+| Environment Variable | Default Value | Description |
+| :--- | :--- | :--- |
+| `XCLI_PATH_MODULES` | `app/modules` | Output path for modules and their Go files |
+| `XCLI_PATH_MODELS` | `app/models` | Output path for DB models |
+| `XCLI_PATH_MIGRATIONS` | `app/database/migrations` | Output path for Goose SQL migrations |
+| `XCLI_PATH_TASKS` | `app/domain/tasks` | Output path for background tasks |
+| `XCLI_PATH_NOTIFICATIONS`| `app/domain/notifications` | Output path for notification modules |
+| `XCLI_PATH_VUE_PAGES` | `resources/js/pages` | Output path for CRUD Vue pages |
 
-```bash
-# Create a global database migration
-xcli make:migration create_users_table
-
-# Create a migration within a specific domain (e.g. auth domain)
-xcli make:migration create_tokens_table --domain auth
-```
+### 2. Import Path Replacement Overrides
+| Environment Variable | Default Value | Replaces in Stubs |
+| :--- | :--- | :--- |
+| `XCLI_IMPORT_HANDLER` | `[module]/app/http/handler` | `{{HANDLER_PATH}}` |
+| `XCLI_IMPORT_MODELS` | `[module]/app/models` | `{{MODELS_PATH}}` |
+| `XCLI_IMPORT_ENUMS` | `[module]/app/domain/enums` | `{{ENUMS_PATH}}` |
+| `XCLI_IMPORT_UTILS` | `[module]/app/domain/utils` | `{{UTILS_PATH}}` |
+| `XCLI_IMPORT_X_APP` | `[module]/app/x` | `{{X_APP_PATH}}` |
+| `XCLI_IMPORT_PKG` | `[module]/pkg` | `{{PKG_PATH}}` |
+| `XCLI_IMPORT_INERTIA` | `[module]/pkg/inertia` | `{{INERTIA_PATH}}` |
+| `XCLI_IMPORT_REQUESTS` | `[module]/app/http/requests` | `{{REQUESTS_PATH}}` |
 
 ---
 
@@ -185,7 +194,7 @@ This creates a `stubs/` directory in your project root containing:
 - `repository.stub` & `crud_repository.stub` (database querying layer)
 - `request.stub` & `crud_request.stub` (input validation)
 - `vue_component.stub` & `crud_vue_index.stub` (Frontend UI templates)
-- `task.stub`, `notification.stub`, `action.stub`, etc.
+- `task.stub`, `notification.stub`, `action.stub`, `routes.stub`, etc.
 
 *To reset or re-publish all stubs and overwrite your local edits, run:*
 ```bash
@@ -196,8 +205,6 @@ xcli stub:publish --force
 When generating a file, `XCli` resolves templates in this order:
 1. **Local Override**: Looks for `./stubs/[stub_name].stub` in your project root.
 2. **Embedded Fallback**: If the local file is missing, it falls back to the default template embedded in the `xcli` binary.
-
-This allows you to keep only the customized stubs you care about (e.g., `model.stub`) and safely delete the rest.
 
 ---
 
@@ -211,26 +218,27 @@ This allows you to keep only the customized stubs you care about (e.g., `model.s
 ### Code Generators (`make`)
 | Command | Description | Flags |
 | :--- | :--- | :--- |
+| `make:module [name]` | Create a new application module structure | |
+| `make:crud [name]` | Generate full CRUD operation pages/modules | `-m` (module name, default: name pluralized), `--skip-vue`, `--skip-repo` |
 | `make:model [name]` | Create a database model | |
-| `make:handler [name]` | Create an HTTP handler | `-a` (also action), `-r` (also repo), `-R` (also request) |
-| `make:action [name]` | Create a business logic action stub | |
-| `make:repo [name]` | Create a database repository stub | |
-| `make:req [name]` | Create an input request validator | |
-| `make:notification [name]` | Create a notification template | |
+| `make:handler [name]` | Create an HTTP handler within a module | `-m` (module name), `-a` (also action), `-r` (also repo), `-R` (also request) |
+| `make:action [name]` | Create a business logic action stub in a module | `-m` (module name) |
+| `make:repo [name]` | Create a database repository stub in a module | `-m` (module name) |
+| `make:req [name]` | Create an input request validator in a module | `-m` (module name) |
+| `make:notification [name]`| Create a notification template | |
 | `make:task [name]` | Create a background Asynq task handler | |
 | `make:vue [name]` | Create a Vue 3 SFC component | `-v, --view` (save in pages folder instead of components) |
 | `make:lang [name]` | Create TypeScript lang files in all locales | |
-| `make:crud [name]` | Generate full CRUD operation pages/modules | `-p` (subpackage, default: `admin`), `--skip-vue`, `--skip-repo` |
 
 ### Database Migrations (`migrate`)
 | Command | Description | Flags |
 | :--- | :--- | :--- |
-| `migrate` | Run all pending migrations | `-d` (domain), `-c` (connection name) |
-| `migrate:rollback` | Rollback the last migration batch | `-d` (domain), `-c` (connection name) |
-| `migrate:status` | Show status of all migrations | `-d` (domain), `-c` (connection name) |
-| `migrate:reset` | Rollback all database migrations | `-d` (domain), `-c` (connection name) |
-| `migrate:refresh` | Rollback all migrations and run them again | `-d` (domain), `-c` (connection name) |
-| `migrate:next [n]` | Run the next `N` migrations sequentially | `-d` (domain), `-c` (connection name) |
-| `migrate:back [n]` | Rollback the last `N` migrations sequentially | `-d` (domain), `-c` (connection name) |
-| `migrate:make [name]` | Create a new SQL migration file | `-d` (domain) |
+| `migrate` | Run all pending migrations | `-c` (connection name) |
+| `migrate:rollback` | Rollback the last migration batch | `-c` (connection name) |
+| `migrate:status` | Show status of all migrations | `-c` (connection name) |
+| `migrate:reset` | Rollback all database migrations | `-c` (connection name) |
+| `migrate:refresh` | Rollback all migrations and run them again | `-c` (connection name) |
+| `migrate:next [n]` | Run the next `N` migrations sequentially | `-c` (connection name) |
+| `migrate:back [n]` | Rollback the last `N` migrations sequentially | `-c` (connection name) |
+| `migrate:make [name]` | Create a new SQL migration file | |
 | `goose [args]` | Direct passthrough to the underlying Goose driver | |
